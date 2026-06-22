@@ -141,7 +141,9 @@ var S = { tasks:[], archive:[], contacts:[], mode:"loading", filter:"전체",
           editId:null, qaText:"", qaPrio:"오늘", showArc:false, showCt:false };
 
 function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-function fmtDate(s){ if(!s) return ""; return String(s).slice(5,10).replace("-","/"); }
+function toSeoulDate(v){ var s=String(v==null?"":v); if(s==="") return ""; if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s; var d=new Date(s); if(isNaN(d.getTime())) return s; return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul",year:"numeric",month:"2-digit",day:"2-digit"}).format(d); }
+function fmtDate(v){ var s=toSeoulDate(v); if(!s) return ""; return String(s).slice(5,10).replace("-","/"); }
+function fmtTime(v){ var s=String(v==null?"":v); if(s==="") return ""; if(/^\d{1,2}:\d{2}/.test(s)) return s.slice(0,5); var d=new Date(s); if(isNaN(d.getTime())) return s; return new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Seoul",hour:"2-digit",minute:"2-digit",hour12:false}).format(d); }
 function weekday(d){ return ["일","월","화","수","목","금","토"][d.getDay()]; }
 function normTask(t){ t.isOwnerTask = (t.isOwnerTask===true || String(t.isOwnerTask).toUpperCase()==="TRUE"); return t; }
 
@@ -203,7 +205,7 @@ function taskCard(t){
   h+='<div class="ctop"><div class="ttl">'+(DOMAINS[t.domain]?DOMAINS[t.domain].e+" ":"")+esc(t.title)+'</div><span class="agent">'+esc(t.agent)+'</span></div>';
   if(t.nextAction) h+='<div class="na">'+esc(t.nextAction)+'</div>';
   h+='<div class="meta">';
-  if(t.dueDate) h+='<span class="tag due">'+fmtDate(t.dueDate)+(t.dueTime?" "+esc(t.dueTime):"")+'</span>';
+  if(t.dueDate) h+='<span class="tag due">'+fmtDate(t.dueDate)+(t.dueTime?" "+fmtTime(t.dueTime):"")+'</span>';
   if(t.isOwnerTask) h+='<span class="tag own">직접</span>';
   if(t.delegatedTo) h+='<span class="tag dele">→'+esc(t.delegatedTo)+'</span>';
   if(t.source) h+='<span class="src mono">'+esc(t.source)+'</span>';
@@ -250,7 +252,7 @@ function render(){
 
   if(cal.length>0){
     h+='<div class="cal"><h3>📅 캘린더 대기 <span style="font-weight:500;color:#a98a3f">· 날짜 잡힌 일 '+cal.length+'건</span></h3>';
-    cal.forEach(function(t){ h+='<div class="it"><div class="d mono">'+fmtDate(t.dueDate)+(t.dueTime?" "+esc(t.dueTime):"")+'</div><div class="tt">'+esc(t.title)+'</div></div>'; });
+    cal.forEach(function(t){ h+='<div class="it"><div class="d mono">'+fmtDate(t.dueDate)+(t.dueTime?" "+fmtTime(t.dueTime):"")+'</div><div class="tt">'+esc(t.title)+'</div></div>'; });
     h+='<div class="note">3단계 캘린더 연동 때 이 목록이 그대로 일정으로 들어갑니다.</div></div>';
   }
 
