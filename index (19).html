@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>조현 비서실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root{
+    --paper:#f7f4ee; --card:#fffdf9; --ink:#1d2722; --sub:#5c655f;
+    --green:#1c5c4a; --gold:#b8975a; --red:#bd4630; --amber:#c98a23; --slate:#737b76;
+    --line:#e6e0d4; --line2:#efe9dd;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:'Noto Sans KR',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; line-height:1.45;
+  }
+  .mono{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace}
+  .wrap{max-width:660px;margin:0 auto;padding:0 14px 64px}
+
+  /* header */
+  .top{position:sticky;top:0;z-index:20;background:var(--paper);
+    border-bottom:1px solid var(--line);padding:14px 0 10px;margin-bottom:6px}
+  .top .row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .brand{font-weight:900;font-size:21px;letter-spacing:-.5px}
+  .brand .dot{color:var(--gold)}
+  .date{font-size:12px;color:var(--sub)}
+  .statusline{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:11px;color:var(--sub)}
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;
+    border:1px solid var(--line);background:var(--card)}
+  .pill.live{color:var(--green);border-color:#bcd6cc}
+  .pill.demo{color:var(--amber);border-color:#ecd9b0}
+  .refresh{margin-left:auto;border:1px solid var(--line);background:var(--card);
+    color:var(--ink);border-radius:8px;padding:4px 10px;font-size:11px;font-family:inherit;cursor:pointer}
+
+  /* quick add */
+  .quick{display:flex;gap:7px;margin:10px 0 4px}
+  .quick input{flex:1;border:1px solid var(--line);background:var(--card);border-radius:10px;
+    padding:11px 12px;font-size:14px;font-family:inherit;color:var(--ink)}
+  .quick input:focus{outline:none;border-color:var(--green)}
+  .quick button{border:none;background:var(--green);color:#fff;border-radius:10px;
+    padding:0 15px;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer}
+  .prio-toggle{display:flex;gap:6px;margin:0 0 12px}
+  .prio-toggle button{flex:1;border:1px solid var(--line);background:var(--card);border-radius:8px;
+    padding:6px 0;font-size:11px;font-family:inherit;color:var(--sub);cursor:pointer}
+  .prio-toggle button[data-on="1"]{border-color:var(--ink);color:var(--ink);font-weight:700;background:#fff}
+
+  /* filter chips */
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 16px}
+  .chip{border:1px solid var(--line);background:var(--card);border-radius:999px;
+    padding:5px 11px;font-size:12px;color:var(--sub);font-family:inherit;cursor:pointer;white-space:nowrap}
+  .chip[data-on="1"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .chip .n{opacity:.6;margin-left:4px;font-size:11px}
+
+  /* section heads */
+  .sec{margin:22px 0 9px;display:flex;align-items:center;gap:9px}
+  .sec h2{margin:0;font-size:13px;font-weight:700;letter-spacing:.3px}
+  .sec .cnt{font-size:11px;color:var(--sub);font-weight:500}
+  .sec .bar{width:9px;height:9px;border-radius:2px}
+  .bar.t{background:var(--red)} .bar.w{background:var(--green)} .bar.a{background:var(--slate)}
+
+  /* calendar waiting */
+  .cal{background:#fffaf0;border:1px solid #ecdfc2;border-radius:12px;padding:11px 13px;margin-bottom:6px}
+  .cal h3{margin:0 0 8px;font-size:12px;font-weight:700;color:#8a6a1f;display:flex;gap:7px;align-items:center}
+  .cal .it{display:flex;gap:10px;align-items:baseline;padding:5px 0;border-top:1px dashed #ecdfc2}
+  .cal .it:first-of-type{border-top:none}
+  .cal .d{font-size:12px;font-weight:700;color:var(--ink);min-width:46px}
+  .cal .tt{font-size:13px;color:var(--ink)}
+  .cal .note{font-size:11px;color:var(--sub);margin-top:7px}
+
+  /* task card */
+  .card{position:relative;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;padding:12px 13px 11px;margin-bottom:9px;overflow:hidden}
+  .card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+  .card.t:before{background:var(--red)} .card.w:before{background:var(--green)} .card.a:before{background:var(--slate)}
+  .ctop{display:flex;align-items:flex-start;gap:8px}
+  .ttl{font-weight:700;font-size:15px;flex:1;letter-spacing:-.2px}
+  .agent{font-size:10px;color:var(--green);background:#eaf2ee;border:1px solid #cfe3da;
+    border-radius:6px;padding:2px 6px;white-space:nowrap;font-weight:500}
+  .na{font-size:12.5px;color:var(--sub);margin-top:6px;line-height:1.5}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px}
+  .tag{font-size:10.5px;border-radius:6px;padding:2px 7px;border:1px solid var(--line2);color:var(--sub);background:#faf7f1}
+  .tag.due{color:var(--ink);border-color:#e3d8c0;background:#fdf6e8;font-weight:600}
+  .tag.own{color:#8a6a1f;border-color:#ecdfc2;background:#fdf6e8}
+  .tag.dele{color:var(--green)}
+  .src{margin-left:auto;display:inline-flex;align-items:center;gap:5px;
+    font-size:10px;color:#8a6a1f;background:#fff;border:1px solid #ecdfc2;border-radius:6px;padding:2px 7px}
+  .src:before{content:"";width:2px;height:11px;background:var(--gold);border-radius:2px}
+  .done{border:1px solid var(--green);background:#fff;color:var(--green);
+    border-radius:8px;padding:6px 13px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:10px}
+  .done:active{background:var(--green);color:#fff}
+
+  /* complete editor */
+  .editor{margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+  .editor textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:9px;
+    font-size:13px;font-family:inherit;color:var(--ink);resize:vertical;min-height:54px}
+  .editor textarea:focus{outline:none;border-color:var(--green)}
+  .erow{display:flex;gap:7px;margin-top:8px}
+  .erow .save{flex:1;border:none;background:var(--green);color:#fff;border-radius:9px;
+    padding:9px;font-weight:700;font-size:13px;font-family:inherit;cursor:pointer}
+  .erow .cancel{border:1px solid var(--line);background:#fff;color:var(--sub);border-radius:9px;
+    padding:9px 14px;font-size:13px;font-family:inherit;cursor:pointer}
+
+  /* collapsible */
+  .fold{margin-top:26px;border-top:1px solid var(--line);padding-top:6px}
+  .fold>button{width:100%;display:flex;align-items:center;gap:9px;background:none;border:none;
+    padding:11px 2px;font-size:14px;font-weight:700;font-family:inherit;color:var(--ink);cursor:pointer}
+  .fold>button .cnt{font-size:11px;color:var(--sub);font-weight:500}
+  .fold>button .arr{margin-left:auto;color:var(--sub);font-size:12px}
+  .grp{font-size:11px;color:#8a6a1f;margin:10px 0 6px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .grp:before{content:"";width:2px;height:12px;background:var(--gold)}
+  .arc{background:#fbf9f4;border:1px solid var(--line2);border-radius:10px;padding:9px 11px;margin-bottom:7px}
+  .arc .h{display:flex;gap:8px;align-items:baseline}
+  .arc .at{font-weight:600;font-size:13px;flex:1}
+  .arc .ad{font-size:10px;color:var(--sub)}
+  .arc .ar{font-size:12px;color:var(--green);margin-top:4px}
+  .arc .ar:before{content:"→ ";color:var(--sub)}
+
+  .ct{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:7px}
+  .ct .cn{font-weight:700;font-size:14px}
+  .ct .cr{font-size:11px;color:var(--green);margin-left:6px}
+  .ct .co{font-size:11px;color:var(--sub);margin-top:2px}
+  .ct .cnote{font-size:12px;color:var(--sub);margin-top:5px;line-height:1.5}
+  .catb{font-size:10px;border-radius:6px;padding:1px 6px;border:1px solid var(--line2);color:var(--sub);background:#faf7f1;margin-left:auto}
+
+  .empty{color:var(--sub);font-size:13px;padding:14px 4px}
+  .foot{margin-top:34px;text-align:center;font-size:10.5px;color:#9aa39d}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;
+    z-index:50;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+/* ====== 설정 ====== */
+/* 배포 후 여기에 비서실 GAS 웹앱 URL 을 넣으면 실제 시트와 연동됩니다.
+   비워두면 데모(미리보기) 모드로 동작합니다. */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzpe1Bne6ltirLase1EMJWMytzgrg9F0MntiY2ETh7the_x-rFrUZwWovIkXU9CxAfgWQ/exec";
+
+/* ====== 카드(도메인) 메타 ====== */
+const DOMAINS = {
+  "이음컴퍼니":{e:"💼",sec:"비즈니스"},
+  "리안호남지사":{e:"💈",sec:"비즈니스"},
+  "430헤어":{e:"✂️",sec:"비즈니스"},
+  "본투비아카데미":{e:"🎓",sec:"비즈니스"},
+  "호남라이온스클럽":{e:"🦁",sec:"모임"},
+  "대한미용사회광주북구지회":{e:"🤝",sec:"모임"},
+  "가족":{e:"🏠",sec:"가정"},
+  "개인인프라":{e:"⚙️",sec:"가정"},
+};
+const PRIO = {"오늘":{k:"t",label:"오늘"},"이번주":{k:"w",label:"이번주"},"언제든":{k:"a",label:"언제든"}};
+const PRIO_ORDER = ["오늘","이번주","언제든"];
+
+/* ====== 데모 데이터 (본사미팅 0617) ====== */
+const DEMO_TASKS = [
+  {id:"T0617-01",title:"하남2지구점 철거 견적·건물주 중재",section:"비즈니스",domain:"리안호남지사",agent:"리안지사PM",priority:"오늘",status:"진행중",dueDate:"2026-06-17",dueTime:"16:00",nextAction:"16:00 현장 방문. 완전철거(뼈대만) 견적 산출하되 확답 보류. 농협 건물주 원상복구 독촉 범위 합의 중재. 대안: 현수막·복도등.",delegatedTo:"",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-02",title:"동림하나로점 정진아 출구전략 통보",section:"비즈니스",domain:"리안호남지사",agent:"리안지사PM",priority:"오늘",status:"진행중",dueDate:"2026-06-17",dueTime:"18:00",nextAction:"18:00 면담. 정액권 소진 추이 파악(2억 중반대). 10월 위약금 없는 가맹해지 방향 넌지시 통보. 미진 시 내용증명.",delegatedTo:"",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-03",title:"라이온스 회비 납부 + 신규 가입 확인",section:"모임",domain:"호남라이온스클럽",agent:"모임비서",priority:"오늘",status:"대기",dueDate:"",dueTime:"",nextAction:"회비 12개월 납부(환대경 체크 후 전달). 이영준 가입의사 직접 확인. 한두경 답장.",delegatedTo:"",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-04",title:"지사 전용 SNS 채널 본사회의 결과 수령",section:"비즈니스",domain:"리안호남지사",agent:"콘텐츠",priority:"이번주",status:"대기",dueDate:"2026-06-19",dueTime:"",nextAction:"이승식 본부장 주재 백금주·강태민 회의 결과 수령. 지사 전용 채널 + 영상 소스 지원 프로세스 확정. 본격 논의는 7/12~13 정기모임.",delegatedTo:"이승식",isOwnerTask:false,source:"본사미팅_0617"},
+  {id:"T0617-05",title:"계약학과·취업설명회 포맷 수령",section:"비즈니스",domain:"리안호남지사",agent:"계약문서",priority:"이번주",status:"대기",dueDate:"2026-06-19",dueTime:"",nextAction:"유준식 본부장 채널로 수도권 계약학과 운영매뉴얼 + 취업설명회 브로셔 수령. 광주권 대학 학과장 미팅 준비용.",delegatedTo:"유준식",isOwnerTask:false,source:"본사미팅_0617"},
+  {id:"T0617-06",title:"이승룡 신규 미용실 오픈 리드 추적",section:"비즈니스",domain:"리안호남지사",agent:"리안지사PM",priority:"이번주",status:"대기",dueDate:"",dueTime:"",nextAction:"이승식 1차 전화 후 추적. 30평·1.5억 언더 오픈안 제안. 아윤채 전판+리안 윈윈 검토. 신규 가맹 파이프라인 등록.",delegatedTo:"",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-07",title:"달라 펑크린 샴푸 60개 무상지원 안내·사진수합",section:"비즈니스",domain:"리안호남지사",agent:"리안지사PM",priority:"이번주",status:"대기",dueDate:"2026-06-24",dueTime:"",nextAction:"6/24 배송(25일 도착) 안내. 매장당 60개 무상, 택배비 박스당 2만원. 고객증정 2장+진열 사진 수합. 제외: 상무·익산모현·전주인후아중·H스타일.",delegatedTo:"",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-08",title:"핸드SOS CRM 출장교육 날짜 확정",section:"비즈니스",domain:"리안호남지사",agent:"리안지사PM",priority:"이번주",status:"대기",dueDate:"",dueTime:"",nextAction:"김종선 매니저 출장교육 날짜 확정(본부장 OK). 입력방법 교육(신규 성별 오염 수정 등). 미용사회 원장+주변 헤어짱 원장 초대.",delegatedTo:"김종선",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-09",title:"용봉점 직원 계약서 작성 지원",section:"비즈니스",domain:"리안호남지사",agent:"계약문서",priority:"언제든",status:"대기",dueDate:"",dueTime:"",nextAction:"황정민 원장 피드백(프로테이지·근무조건) 후 직원 1:1 계약서 작성. 건강이슈·오후2시 출근 고려. CRM 카카오→핸드SOS 등록 안내.",delegatedTo:"",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-10",title:"유한양행 유산균 오픈매장 지원 안내",section:"비즈니스",domain:"리안호남지사",agent:"리안지사PM",priority:"언제든",status:"대기",dueDate:"2026-07-04",dueTime:"",nextAction:"7월초 지원. 대상: 용봉·하남2·상무(오픈1년 미만). 매장당 30박스(210만원). 10박스 냉장진열·20박스 쿠폰 직배송. 사진 수합.",delegatedTo:"",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-11",title:"9월 디플로마 교육 유치 날짜 확정",section:"비즈니스",domain:"본투비아카데미",agent:"본투비아카데미",priority:"언제든",status:"대기",dueDate:"",dueTime:"",nextAction:"9월초 유치. 밀본(4회·6시간·화요일) 광주 대리점 반반 무료모집 타진. 시세이도·로레알 본사 조율(리안 50% 할인). 정원 15명.",delegatedTo:"이승식",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-12",title:"일곡점 CRM 정액권 분석·상담",section:"비즈니스",domain:"리안호남지사",agent:"리안지사PM",priority:"언제든",status:"대기",dueDate:"",dueTime:"",nextAction:"리안 일곡점(김다정) 정액권 비중 2%→20%대. 커트+염색 묶음(남자염색 월40만), 네이버 플레이스 세팅 점검. CRM+플레이스 교차확인.",delegatedTo:"",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-13",title:"단기 취업속성반(2~3개월) 모델 검토",section:"비즈니스",domain:"본투비아카데미",agent:"본투비아카데미",priority:"언제든",status:"대기",dueDate:"",dueTime:"",nextAction:"자격증 보유 미취업자 모아 맨 스타일까지 단기속성 후 매장공급. 1안(학원)·2안(자체)·3안(계약학과) 현실성 모색. 본사 강사비 셰어 논의.",delegatedTo:"",isOwnerTask:true,source:"본사미팅_0617"},
+  {id:"T0617-14",title:"하반기 목포권 2개점 아웃바운드 스케줄",section:"비즈니스",domain:"리안호남지사",agent:"리안지사PM",priority:"언제든",status:"대기",dueDate:"",dueTime:"",nextAction:"2개점 개설 목표. 지역·일정 선정 후 본사 1주전 요청 시 이승식 직접 하향 서포트. 회장단에 던질 실적 팩트로 활용.",delegatedTo:"이승식",isOwnerTask:true,source:"본사미팅_0617"},
+];
+const DEMO_CONTACTS = [
+  {name:"이승식",org:"리안헤어 본사",role:"가맹사업본부장",category:"본사",note:"지사 직속 본사 채널. 짝수달 광주 하향·홀수달 서울 미팅. 아웃바운드/교육/물류 통제 가능."},
+  {name:"유준식",org:"리안헤어 본사",role:"기획본부장",category:"본사",note:"회장 유상준 아들. 계약학과·취업설명회·MOU 파견 담당."},
+  {name:"강태민",org:"리안헤어 본사",role:"온라인마케팅팀장",category:"본사",note:"지사 SNS·플레이스·마케팅 1차 채널."},
+  {name:"백금주",org:"리안헤어 본사",role:"홍보팀장",category:"본사",note:"본사 오피셜 SNS·브랜딩. 지사 채널 지원 6/19 회의 참석."},
+  {name:"김종선",org:"핸즈/CRM",role:"매니저",category:"협력",note:"핸드SOS 출장교육 가능. 데이터 입력방법 교육 담당."},
+  {name:"이승룡",org:"아윤채",role:"잠재 가맹점주(리드)",category:"영업리드",note:"이승식 옛 동료. 하반기 미용실 오픈 의향. 자본 충분(현금 4~5억). 30평·1.5억 언더 권장."},
+];
+
+/* ====== 통신 ====== */
+async function apiGet(action){
+  const res = await fetch(GAS_URL + "?action=" + action);
+  return res.json();
+}
+async function apiPost(payload){
+  const res = await fetch(GAS_URL, { method:"POST", body: JSON.stringify(payload) });
+  return res.json();
+}
+
+function fmtDate(s){
+  if(!s) return "";
+  const d = String(s).slice(5,10).replace("-","/");
+  return d;
+}
+function weekday(d){ return ["일","월","화","수","목","금","토"][d.getDay()]; }
+
+function App(){
+  const [tasks,setTasks] = useState([]);
+  const [archive,setArchive] = useState([]);
+  const [contacts,setContacts] = useState([]);
+  const [mode,setMode] = useState("loading"); // loading | demo | live
+  const [filter,setFilter] = useState("전체");
+  const [editId,setEditId] = useState(null);
+  const [result,setResult] = useState("");
+  const [qa,setQa] = useState("");
+  const [qaPrio,setQaPrio] = useState("오늘");
+  const [showArc,setShowArc] = useState(false);
+  const [showCt,setShowCt] = useState(false);
+  const [toast,setToast] = useState("");
+
+  const today = new Date();
+  const dateLabel = today.getFullYear()+"."+String(today.getMonth()+1).padStart(2,"0")+"."+String(today.getDate()).padStart(2,"0")+" "+weekday(today);
+
+  function flash(m){ setToast(m); setTimeout(()=>setToast(""),2200); }
+
+  async function load(){
+    if(!GAS_URL){ setTasks(DEMO_TASKS); setContacts(DEMO_CONTACTS); setArchive([]); setMode("demo"); return; }
+    try{
+      const [t,a,c] = await Promise.all([apiGet("getTasks"),apiGet("getArchive"),apiGet("getContacts")]);
+      setTasks((t.tasks||[]).map(normTask));
+      setArchive(a.archive||[]);
+      setContacts(c.contacts||[]);
+      setMode("live");
+    }catch(err){
+      setTasks(DEMO_TASKS); setContacts(DEMO_CONTACTS); setArchive([]); setMode("demo");
+      flash("연결 실패 — 데모 모드로 표시");
+    }
+  }
+  function normTask(t){ return {...t, isOwnerTask: t.isOwnerTask===true || String(t.isOwnerTask).toUpperCase()==="TRUE"}; }
+
+  useEffect(()=>{ load(); },[]);
+
+  async function complete(id){
+    const t = tasks.find(x=>x.id===id);
+    if(mode==="live"){
+      try{ const r = await apiPost({action:"completeTask",id,result}); if(!r.ok) throw 0; }
+      catch(e){ flash("저장 실패 — 다시 시도"); return; }
+    }
+    setArchive(a=>[...a,{id:t.id,title:t.title,domain:t.domain,agent:t.agent,priority:t.priority,
+      dueDate:t.dueDate,source:t.source,result:result,completedAt:"방금",originalNextAction:t.nextAction}]);
+    setTasks(ts=>ts.filter(x=>x.id!==id));
+    setEditId(null); setResult("");
+    flash("완료보관함으로 이동했습니다");
+  }
+
+  async function quickAdd(){
+    const text = qa.trim(); if(!text) return;
+    const t = {id:"Q"+Date.now(),title:text,section:"비즈니스",domain:"이음컴퍼니",agent:"총괄비서",
+      priority:qaPrio,status:"대기",dueDate:"",dueTime:"",nextAction:"",delegatedTo:"",isOwnerTask:true,source:"빠른메모"};
+    if(mode==="live"){
+      try{ await apiPost({action:"appendTasks",_meta:{source:"빠른메모"},tasks:[t]}); }catch(e){ flash("저장 실패"); return; }
+    }
+    setTasks(ts=>[...ts,t]); setQa(""); flash("추가했습니다");
+  }
+
+  async function seedToSheet(){
+    if(mode!=="live"){ flash("먼저 GAS_URL을 연결하세요"); return; }
+    flash("시트에 넣는 중…");
+    try{
+      await apiPost({action:"appendTasks",_meta:{source:"본사미팅_0617"},
+        tasks:DEMO_TASKS, contacts:DEMO_CONTACTS});
+      await load();
+      flash("14건·연락처 6명 넣었습니다");
+    }catch(e){ flash("실패 — 다시 시도"); }
+  }
+
+  const visible = useMemo(()=> tasks.filter(t=> filter==="전체" || t.domain===filter), [tasks,filter]);
+  const calItems = useMemo(()=> tasks.filter(t=>t.dueDate).sort((a,b)=>String(a.dueDate).localeCompare(b.dueDate)), [tasks]);
+  const counts = useMemo(()=>{ const m={}; tasks.forEach(t=>m[t.domain]=(m[t.domain]||0)+1); return m; },[tasks]);
+  const archGroups = useMemo(()=>{ const m={}; archive.forEach(a=>{ (m[a.source]=m[a.source]||[]).push(a); }); return m; },[archive]);
+
+  return (
+    <div className="wrap">
+      <div className="top">
+        <div className="row">
+          <div className="brand">조현 <span className="dot">·</span> 비서실</div>
+          <div className="date mono">{dateLabel}</div>
+        </div>
+        <div className="statusline">
+          {mode==="live" && <span className="pill live">● 시트 연동</span>}
+          {mode==="demo" && <span className="pill demo">● 데모 미리보기</span>}
+          {mode==="loading" && <span className="pill">불러오는 중…</span>}
+          <span>할일 {tasks.length}</span>
+          <button className="refresh" onClick={load}>새로고침</button>
+        </div>
+      </div>
+
+      <div className="quick">
+        <input value={qa} onChange={e=>setQa(e.target.value)}
+          onKeyDown={e=>{if(e.key==="Enter")quickAdd();}}
+          placeholder="빠른 메모 — 떠오른 일을 적어 바로 담기" />
+        <button onClick={quickAdd}>담기</button>
+      </div>
+      <div className="prio-toggle">
+        {PRIO_ORDER.map(p=>(
+          <button key={p} data-on={qaPrio===p?1:0} onClick={()=>setQaPrio(p)}>{p}</button>
+        ))}
+      </div>
+
+      <div className="chips">
+        <button className="chip" data-on={filter==="전체"?1:0} onClick={()=>setFilter("전체")}>전체<span className="n">{tasks.length}</span></button>
+        {Object.keys(DOMAINS).map(d=>(
+          <button key={d} className="chip" data-on={filter===d?1:0} onClick={()=>setFilter(filter===d?"전체":d)}>
+            {DOMAINS[d].e} {d.replace("대한미용사회광주북구지회","미용사회").replace("호남라이온스클럽","라이온스").replace("개인인프라","개인")}
+            {counts[d]?<span className="n">{counts[d]}</span>:null}
+          </button>
+        ))}
+      </div>
+
+      {mode==="live" && tasks.length===0 && (
+        <div className="cal" style={{background:"#eef5f1",borderColor:"#cfe3da"}}>
+          <h3 style={{color:"#1c5c4a"}}>🌱 처음 한 번만</h3>
+          <div className="note" style={{color:"#3d5b50",marginTop:0,marginBottom:8}}>
+            시트가 비어 있습니다. 본사미팅(0617)에서 정리한 할일 14건과 연락처 6명을 넣어 시작하세요.
+          </div>
+          <button className="done" style={{marginTop:0}} onClick={seedToSheet}>14건·연락처 6명 시트에 넣기</button>
+        </div>
+      )}
+
+      {calItems.length>0 && (
+        <div className="cal">
+          <h3>📅 캘린더 대기 <span style={{fontWeight:500,color:"#a98a3f"}}>· 날짜 잡힌 일 {calItems.length}건</span></h3>
+          {calItems.map(t=>(
+            <div className="it" key={t.id}>
+              <div className="d mono">{fmtDate(t.dueDate)}{t.dueTime?" "+t.dueTime:""}</div>
+              <div className="tt">{t.title}</div>
+            </div>
+          ))}
+          <div className="note">3단계 캘린더 연동 때 이 목록이 그대로 일정으로 들어갑니다.</div>
+        </div>
+      )}
+
+      {PRIO_ORDER.map(p=>{
+        const items = visible.filter(t=>t.priority===p);
+        if(items.length===0) return null;
+        return (
+          <div key={p}>
+            <div className="sec">
+              <span className={"bar "+PRIO[p].k}></span>
+              <h2>{PRIO[p].label}</h2>
+              <span className="cnt">{items.length}건</span>
+            </div>
+            {items.map(t=>(
+              <div className={"card "+PRIO[t.priority].k} key={t.id}>
+                <div className="ctop">
+                  <div className="ttl">{DOMAINS[t.domain]?DOMAINS[t.domain].e+" ":""}{t.title}</div>
+                  <span className="agent">{t.agent}</span>
+                </div>
+                {t.nextAction && <div className="na">{t.nextAction}</div>}
+                <div className="meta">
+                  {t.dueDate && <span className="tag due">{fmtDate(t.dueDate)}{t.dueTime?" "+t.dueTime:""}</span>}
+                  {t.isOwnerTask && <span className="tag own">직접</span>}
+                  {t.delegatedTo && <span className="tag dele">→{t.delegatedTo}</span>}
+                  {t.source && <span className="src mono">{t.source}</span>}
+                </div>
+                {editId===t.id ? (
+                  <div className="editor">
+                    <textarea autoFocus value={result} onChange={e=>setResult(e.target.value)}
+                      placeholder="어떻게 끝났는지 한 줄 — 예) 정진아 원장 10월 종료 수긍" />
+                    <div className="erow">
+                      <button className="save" onClick={()=>complete(t.id)}>완료 저장</button>
+                      <button className="cancel" onClick={()=>{setEditId(null);setResult("");}}>취소</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button className="done" onClick={()=>{setEditId(t.id);setResult("");}}>완료</button>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+      })}
+
+      {visible.length===0 && <div className="empty">표시할 할일이 없습니다.</div>}
+
+      <div className="fold">
+        <button onClick={()=>setShowArc(s=>!s)}>
+          ✅ 완료보관함 <span className="cnt">{archive.length}건</span>
+          <span className="arr">{showArc?"▲":"▼"}</span>
+        </button>
+        {showArc && (archive.length===0
+          ? <div className="empty">아직 완료한 일이 없습니다. 할일에서 완료하면 출처별로 여기에 쌓입니다.</div>
+          : Object.keys(archGroups).map(src=>(
+              <div key={src}>
+                <div className="grp mono">{src}</div>
+                {archGroups[src].map((a,i)=>(
+                  <div className="arc" key={a.id+"_"+i}>
+                    <div className="h">
+                      <div className="at">{DOMAINS[a.domain]?DOMAINS[a.domain].e+" ":""}{a.title}</div>
+                      <div className="ad mono">{a.completedAt}</div>
+                    </div>
+                    {a.result && <div className="ar">{a.result}</div>}
+                  </div>
+                ))}
+              </div>
+            ))
+        )}
+      </div>
+
+      <div className="fold">
+        <button onClick={()=>setShowCt(s=>!s)}>
+          👥 연락처허브 <span className="cnt">{contacts.length}명</span>
+          <span className="arr">{showCt?"▲":"▼"}</span>
+        </button>
+        {showCt && (contacts.length===0
+          ? <div className="empty">연락처가 없습니다.</div>
+          : contacts.map((c,i)=>(
+              <div className="ct" key={c.name+"_"+i}>
+                <div style={{display:"flex",alignItems:"baseline"}}>
+                  <span className="cn">{c.name}</span><span className="cr">{c.role}</span>
+                  <span className="catb">{c.category}</span>
+                </div>
+                <div className="co">{c.org}</div>
+                {c.note && <div className="cnote">{c.note}</div>}
+              </div>
+            ))
+        )}
+      </div>
+
+      <div className="foot">조현 비서실 · 구글시트 연동(GAS) · 메인 허브</div>
+      {toast && <div className="toast">{toast}</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
